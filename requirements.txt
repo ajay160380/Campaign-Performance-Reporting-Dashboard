@@ -1,0 +1,6 @@
+streamlit
+pandas
+plotly
+openpyxl
+fpdf2
+groq
