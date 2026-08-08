@@ -1,0 +1,75 @@
+# Campaign Performance Dashboard — Premium Dark Theme
+# Neon-accented dark theme with Inter typography
+
+[theme]
+base = "dark"
+primaryColor = "#00d4ff"                # Neon cyan — primary actions
+backgroundColor = "#0a0e27"             # Deep navy
+secondaryBackgroundColor = "#141e41"    # Slightly lighter navy
+codeBackgroundColor = "#141e41"
+textColor = "#e8ecf4"                   # Light silver text
+linkColor = "#00d4ff"
+borderColor = "#1e2d5a"
+codeTextColor = "#b0bec5"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "12px"                     # Generous rounding
+buttonRadius = "10px"
+
+# Typography — Inter from Google Fonts
+font = "'Inter':https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+headingFont = "'Inter':https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap"
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+baseFontSize = 14
+baseFontWeight = 400
+codeFontSize = "13px"
+headingFontSizes = ["32px", "24px", "20px", "16px", "14px", "12px"]
+headingFontWeights = [800, 700, 600, 600, 500, 500]
+linkUnderline = false
+
+# Semantic colors — neon-inspired
+greenColor = "#39ff14"
+redColor = "#ff6b6b"
+yellowColor = "#ffbe0b"
+orangeColor = "#fb923c"
+blueColor = "#00d4ff"
+violetColor = "#b537f2"
+grayColor = "#8892b0"
+
+# Chart colours — neon palette
+chartCategoricalColors = [
+    "#00d4ff",
+    "#ff006e",
+    "#39ff14",
+    "#ffbe0b",
+    "#b537f2",
+    "#ff6b6b",
+    "#20e3b2",
+    "#ff71ce",
+]
+
+chartSequentialColors = [
+    "#04082e",
+    "#0a1456",
+    "#0f2080",
+    "#1433aa",
+    "#1e58d0",
+    "#2b7ee6",
+    "#4da6f0",
+    "#7cc4f5",
+    "#afe0fa",
+    "#e0f4ff",
+]
+
+# Dataframe styling
+dataframeBorderColor = "#1e2d5a"
+dataframeHeaderBackgroundColor = "#141e41"
+
+# Sidebar — deeper dark
+[theme.sidebar]
+backgroundColor = "#080c22"
+secondaryBackgroundColor = "#0e1333"
+codeBackgroundColor = "#0e1333"
+textColor = "#e8ecf4"
+borderColor = "#1e2d5a"
+primaryColor = "#00d4ff"

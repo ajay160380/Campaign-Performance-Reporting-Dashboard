@@ -4,6 +4,8 @@ app.py — Campaign Performance & Reporting Dashboard
 Main Streamlit application. Orchestrates data loading, validation,
 metric computation, visualisation, and report export.
 
+Premium dark-themed UI with glassmorphism, neon accents, and animations.
+
 Run with:  streamlit run app.py
 """
 
@@ -35,45 +37,175 @@ st.set_page_config(
     page_title="Campaign Performance Dashboard",
     page_icon="📊",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # ------------------------------------------------------------------
-# Custom CSS for a cleaner look
+# Minimal decorative CSS — theme handled by .streamlit/config.toml
+# IMPORTANT: No font-family overrides (breaks Material Icons)
 # ------------------------------------------------------------------
-st.markdown("""
+st.html("""
 <style>
-    /* KPI card styling — glassmorphism, works on both light & dark themes */
+    /* Thin scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+    ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.25); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,212,255,0.45); }
+
+    /* KPI cards — glassmorphic glow + hover lift */
     [data-testid="stMetric"] {
-        background: rgba(30, 58, 95, 0.85) !important;
-        padding: 18px 22px !important;
-        border-radius: 12px;
-        border: 1px solid rgba(100, 180, 255, 0.2);
-        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-        backdrop-filter: blur(8px);
+        border: 1px solid rgba(0,212,255,0.12) !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.25), 0 0 40px rgba(0,212,255,0.04) !important;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-3px) !important;
+        border-color: rgba(0,212,255,0.3) !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 60px rgba(0,212,255,0.08) !important;
     }
     [data-testid="stMetricLabel"] {
-        color: #93c5fd !important;
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
+        color: rgba(0,212,255,0.85) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.06em !important;
+        font-size: 0.78rem !important;
     }
+
+    /* Gradient dividers */
+    [data-testid="stDivider"], hr {
+        border: none !important;
+        height: 1px !important;
+        background: linear-gradient(90deg, transparent 0%, rgba(0,212,255,0.2) 20%, rgba(181,55,242,0.2) 50%, rgba(0,212,255,0.2) 80%, transparent 100%) !important;
+    }
+
+    /* Fix for multiselect tag overflow and ballooning */
+    .stMultiSelect [data-baseweb="select"] > div {
+        padding-bottom: 5px !important;
+    }
+    .stMultiSelect [data-baseweb="tag"] {
+        margin-top: 5px !important;
+        margin-bottom: 0px !important;
+        border-radius: 6px !important;
+        padding: 0px 2px !important;
+    }
+    .stMultiSelect [data-baseweb="tag"] span {
+        font-size: 0.8rem !important;
+        color: #ffffff !important;
+    }
+
+    /* Chat Messages Styling */
+    [data-testid="stChatMessage"] {
+        background-color: transparent !important;
+        border-radius: 12px;
+        padding: 1rem !important;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    /* User Message Bubble */
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+        background: linear-gradient(135deg, rgba(0,212,255,0.05) 0%, rgba(0,212,255,0.01) 100%) !important;
+        border-right: 3px solid #00d4ff !important;
+        border-left: none !important;
+    }
+    /* Assistant Message Bubble */
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+        background: linear-gradient(135deg, rgba(181,55,242,0.05) 0%, rgba(181,55,242,0.01) 100%) !important;
+        border-left: 3px solid #b537f2 !important;
+        border-right: none !important;
+    }
+    /* Avatar tweaks */
+    [data-testid="chatAvatarIcon-user"], [data-testid="chatAvatarIcon-assistant"] {
+        background-color: transparent !important;
+        border-radius: 50% !important;
+    }
+
+    /* Premium KPI Metric Cards */
+    [data-testid="stMetric"] {
+        background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+        border: 1px solid rgba(0,212,255,0.15);
+        border-radius: 12px;
+        padding: 1.25rem 1rem !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    [data-testid="stMetric"]::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 3px;
+        background: linear-gradient(90deg, #00d4ff, #b537f2);
+        opacity: 0.8;
+    }
+
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0,212,255,0.15), inset 0 0 0 1px rgba(255,255,255,0.1);
+        border: 1px solid rgba(0,212,255,0.3);
+    }
+
+    [data-testid="stMetricLabel"] > div {
+        color: #8b9bb4 !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+
     [data-testid="stMetricValue"] {
         color: #ffffff !important;
-        font-size: 1.5rem !important;
+        font-size: 1.8rem !important;
         font-weight: 700 !important;
+        letter-spacing: -0.5px;
+        text-shadow: 0 2px 10px rgba(0,212,255,0.2);
     }
-    /* Section dividers */
-    hr {
-        border-color: rgba(255,255,255,0.1);
+    
+    /* Small layout fix to remove default margin inside metric */
+    [data-testid="stMetric"] > div {
+        margin: 0 !important;
     }
+
+    /* Chart containers — subtle glass border */
+    [data-testid="stPlotlyChart"] {
+        border: 1px solid rgba(0,212,255,0.08) !important;
+        border-radius: 14px !important;
+        padding: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    [data-testid="stPlotlyChart"]:hover {
+        border-color: rgba(0,212,255,0.18) !important;
+        box-shadow: 0 4px 24px rgba(0,212,255,0.06) !important;
+    }
+
+    /* Download buttons — gradient accent */
+    .stDownloadButton > button {
+        background: linear-gradient(135deg, rgba(0,212,255,0.12) 0%, rgba(181,55,242,0.12) 100%) !important;
+        border: 1px solid rgba(0,212,255,0.2) !important;
+        transition: all 0.3s ease !important;
+    }
+    .stDownloadButton > button:hover {
+        background: linear-gradient(135deg, rgba(0,212,255,0.22) 0%, rgba(181,55,242,0.22) 100%) !important;
+        border-color: rgba(0,212,255,0.45) !important;
+        box-shadow: 0 4px 20px rgba(0,212,255,0.12) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Fade-in animation */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .main .block-container { animation: fadeInUp 0.5s ease-out; }
 </style>
-""", unsafe_allow_html=True)
+""")
 
 
 # ------------------------------------------------------------------
 # Section A — Header & file upload
 # ------------------------------------------------------------------
 st.title("📊 Campaign Performance & Reporting Dashboard")
-st.markdown(
+st.caption(
     "Upload your campaign data (CSV or XLSX) to analyze performance metrics, "
     "visualize trends, and export professional reports."
 )
@@ -117,7 +249,7 @@ if missing_cols:
 # Run quality checks and show expandable report
 quality = run_quality_checks(raw_df)
 
-with st.expander("🔍 Data Quality Report", expanded=False):
+with st.expander("🔍 Data quality report", expanded=False):
     issues_found = False
 
     # Missing values
@@ -225,7 +357,8 @@ if filtered.empty:
 # Section C — Top KPI cards
 # ------------------------------------------------------------------
 st.divider()
-st.subheader("📈 Key Performance Indicators")
+st.subheader("📈 Key performance indicators")
+st.caption("Real-time metrics across all filtered campaigns")
 
 kpis = compute_summary_kpis(filtered)
 
@@ -242,7 +375,8 @@ col6.metric("Overall ROI", f"{kpis['overall_roi']:.1f}%")
 # Section D — Charts
 # ------------------------------------------------------------------
 st.divider()
-st.subheader("📊 Visual Analytics")
+st.subheader("📊 Visual analytics")
+st.caption("Interactive charts powered by Plotly — hover for details")
 
 # Aggregate data for charts
 campaign_agg = aggregate_by(filtered, "campaign name")
@@ -253,28 +387,29 @@ chart_col1, chart_col2 = st.columns(2)
 
 with chart_col1:
     fig1 = campaign_spend_vs_revenue(campaign_agg)
-    st.plotly_chart(fig1, use_container_width=True)
+    st.plotly_chart(fig1, width="stretch")
 
 with chart_col2:
     fig2 = daily_trend(filtered)
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width="stretch")
 
 # Row 2: two charts side by side
 chart_col3, chart_col4 = st.columns(2)
 
 with chart_col3:
     fig3 = platform_breakdown(platform_agg)
-    st.plotly_chart(fig3, use_container_width=True)
+    st.plotly_chart(fig3, width="stretch")
 
 with chart_col4:
     fig4 = top_bottom_roi(campaign_agg)
-    st.plotly_chart(fig4, use_container_width=True)
+    st.plotly_chart(fig4, width="stretch")
 
 # ------------------------------------------------------------------
 # Section E — Data table
 # ------------------------------------------------------------------
 st.divider()
-st.subheader("📋 Filtered Dataset")
+st.subheader("📋 Filtered dataset")
+st.caption("Browse and inspect the underlying campaign data")
 
 # Prepare display columns with nicely formatted headers
 display_df = filtered.copy()
@@ -284,7 +419,7 @@ display_df.columns = [c.title() for c in display_df.columns]
 
 st.dataframe(
     display_df,
-    use_container_width=True,
+    width="stretch",
     height=400,
 )
 st.caption(f"Showing {len(filtered):,} rows after filtering.")
@@ -293,7 +428,8 @@ st.caption(f"Showing {len(filtered):,} rows after filtering.")
 # Section F — Report downloads
 # ------------------------------------------------------------------
 st.divider()
-st.subheader("📥 Export Reports")
+st.subheader("📥 Export reports")
+st.caption("Download formatted reports for stakeholders")
 
 dl_col1, dl_col2 = st.columns(2)
 
@@ -325,85 +461,69 @@ with dl_col2:
 # Section G — AI Insights Assistant
 # ------------------------------------------------------------------
 st.divider()
-st.subheader("🤖 Ask AI About This Data")
+st.subheader("🤖 AI insights assistant")
+# Build data summary (needed for AI responses)
+data_summary = build_data_summary(filtered, kpis, campaign_agg, platform_agg)
 
-if not is_api_key_set():
-    st.info(
-        "💡 **AI Assistant needs a free Groq API key.**\n\n"
-        "1. Get one at [console.groq.com](https://console.groq.com)\n"
-        "2. Set it before running: `export GROQ_API_KEY=your_key_here`\n"
-        "3. Restart the app — the chat will appear here."
+# Initialize chat history in session state
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+# --- Suggested question buttons ---
+suggested_qs = [
+    "Which campaign performed best?",
+    "Which platform should I invest more in?",
+    "Summarize this period's performance",
+    "What's dragging down ROI?",
+]
+
+sq_cols = st.columns(len(suggested_qs))
+for i, q in enumerate(suggested_qs):
+    if sq_cols[i].button(q, key=f"sq_{i}", width="stretch"):
+        st.session_state.pending_question = q
+
+# --- Display chat history ---
+for msg in st.session_state.chat_history:
+    avatar_emoji = "👤" if msg["role"] == "user" else "✨"
+    with st.chat_message(msg["role"], avatar=avatar_emoji):
+        st.markdown(msg["content"])
+
+# --- Chat input (always visible) ---
+user_input = st.chat_input("Ask a question about your campaign data...")
+
+# Check if a suggested question was clicked
+if "pending_question" in st.session_state:
+    user_input = st.session_state.pending_question
+    del st.session_state.pending_question
+
+if user_input:
+    # Add user message to history and display it
+    st.session_state.chat_history.append(
+        {"role": "user", "content": user_input}
     )
-else:
-    # Build compact data summary from current filtered data
-    data_summary = build_data_summary(filtered, kpis, campaign_agg, platform_agg)
+    with st.chat_message("user", avatar="👤"):
+        st.markdown(user_input)
 
-    # Initialize chat history in session state
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
+    # Get AI response
+    with st.chat_message("assistant", avatar="✨"):
+        with st.spinner("Analyzing your campaign data..."):
+            response = get_ai_response(user_input, data_summary)
+        st.markdown(response)
 
-    # --- Suggested question buttons ---
-    st.caption("Try a suggested question:")
-    suggested_qs = [
-        "Which campaign performed best?",
-        "Which platform should I invest more in?",
-        "Summarize this period's performance",
-        "What's dragging down ROI?",
-    ]
+    # Add assistant response to history
+    st.session_state.chat_history.append(
+        {"role": "assistant", "content": response}
+    )
 
-    sq_cols = st.columns(len(suggested_qs))
-    for i, q in enumerate(suggested_qs):
-        if sq_cols[i].button(q, key=f"sq_{i}", use_container_width=True):
-            st.session_state.pending_question = q
+    # Keep only the last 10 messages to avoid unbounded growth
+    if len(st.session_state.chat_history) > 20:  # 10 pairs = 20 messages
+        st.session_state.chat_history = st.session_state.chat_history[-20:]
 
-    # --- Display chat history ---
-    for msg in st.session_state.chat_history:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-
-    # --- Chat input ---
-    user_input = st.chat_input("Ask a question about your campaign data...")
-
-    # Check if a suggested question was clicked
-    if "pending_question" in st.session_state:
-        user_input = st.session_state.pending_question
-        del st.session_state.pending_question
-
-    if user_input:
-        # Add user message to history and display it
-        st.session_state.chat_history.append(
-            {"role": "user", "content": user_input}
-        )
-        with st.chat_message("user"):
-            st.markdown(user_input)
-
-        # Get AI response
-        with st.chat_message("assistant"):
-            with st.spinner("Analyzing your campaign data..."):
-                response = get_ai_response(user_input, data_summary)
-            st.markdown(response)
-
-        # Add assistant response to history
-        st.session_state.chat_history.append(
-            {"role": "assistant", "content": response}
-        )
-
-        # Keep only the last 10 messages to avoid unbounded growth
-        if len(st.session_state.chat_history) > 20:  # 10 pairs = 20 messages
-            st.session_state.chat_history = st.session_state.chat_history[-20:]
-
-        # Rerun to clear the input and show updated history cleanly
-        st.rerun()
-
-    st.caption("Powered by Llama 3.1 (Groq, free tier)")
+    # Rerun to clear the input and show updated history cleanly
+    st.rerun()
 
 # ------------------------------------------------------------------
 # Footer
 # ------------------------------------------------------------------
 st.divider()
-st.markdown(
-    "<div style='text-align:center; color:#888; font-size:0.85rem;'>"
-    "Campaign Performance & Reporting Dashboard · Built with Streamlit & Plotly"
-    "</div>",
-    unsafe_allow_html=True,
-)
+st.caption("Campaign Performance & Reporting Dashboard · Built with Streamlit & Plotly")

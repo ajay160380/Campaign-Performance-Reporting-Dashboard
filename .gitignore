@@ -1,3 +1,10 @@
 __pycache__/
 *.pyc
 .env
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Local AI folders
+.agents/
+.claude/

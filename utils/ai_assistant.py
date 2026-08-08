@@ -143,7 +143,12 @@ MODELS = ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"]
 
 
 def is_api_key_set() -> bool:
-    """Check whether the GROQ_API_KEY environment variable is configured."""
+    """Check whether the GROQ_API_KEY is configured via env, secrets, or session state."""
+    import streamlit as st
+    if "GROQ_API_KEY" in st.session_state and st.session_state.GROQ_API_KEY:
+        return True
+    if "GROQ_API_KEY" in st.secrets:
+        return True
     key = os.environ.get("GROQ_API_KEY", "").strip()
     return len(key) > 0
 
@@ -166,8 +171,19 @@ def get_ai_response(user_question: str, data_summary: str) -> str:
     """
     try:
         from groq import Groq
+        import streamlit as st
 
-        client = Groq()  # reads GROQ_API_KEY from env automatically
+        # Resolve API key
+        api_key = os.environ.get("GROQ_API_KEY", "").strip()
+        if not api_key and "GROQ_API_KEY" in st.secrets:
+            api_key = st.secrets["GROQ_API_KEY"]
+        if not api_key and "GROQ_API_KEY" in st.session_state:
+            api_key = st.session_state.GROQ_API_KEY
+
+        if not api_key:
+            return "⚠️ AI API key is not configured in the environment."
+
+        client = Groq(api_key=api_key)
 
         user_content = (
             f"Here is the campaign performance data summary:\n\n"
