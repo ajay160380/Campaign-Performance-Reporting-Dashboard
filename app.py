@@ -313,11 +313,11 @@ with st.expander("🔍 Data quality report", expanded=False):
 # Clean the data (cached for performance with large datasets)
 # ------------------------------------------------------------------
 @st.cache_data(show_spinner="Cleaning and processing data…")
-def _process_data(_df: pd.DataFrame) -> pd.DataFrame:
+def _process_data(input_df: pd.DataFrame) -> pd.DataFrame:
     """Clean and add metric columns — cached to avoid recomputation."""
-    _df = clean_data(_df, drop_duplicates=True, fill_missing_zero=True)
-    _df = add_metric_columns(_df)
-    return _df
+    processed = clean_data(input_df, drop_duplicates=True, fill_missing_zero=True)
+    processed = add_metric_columns(processed)
+    return processed
 
 
 df = _process_data(raw_df)
