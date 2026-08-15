@@ -57,14 +57,14 @@ COLUMN_ALIASES = {
         "campaign_cost", "campaign cost", "ad_spend", "ad spend",
         "budget", "total_cost", "total cost", "media_cost", "media cost",
         "investment", "adspend", "marketing_spend", "marketing spend",
-        "cost_per_result", "advertising_cost",
+        "cost_per_result", "advertising_cost", "budget_allocated",
     ],
     "revenue": [
         "revenue", "total_revenue", "total revenue", "earnings",
         "income", "sales", "total_sales", "total sales", "value",
         "conversion_value", "conversion value", "purchase_value",
         "purchase value", "gmv", "gross_revenue", "gross revenue",
-        "return", "returns",
+        "return", "returns", "revenue_generated", "revenue generated",
     ],
     "conversions": [
         "conversions", "conversion", "total_conversions",
@@ -228,7 +228,7 @@ def run_quality_checks(df: pd.DataFrame) -> dict:
 
     # --- Unparseable dates ---
     if "date" in df.columns:
-        parsed = pd.to_datetime(df["date"], errors="coerce")
+        parsed = pd.to_datetime(df["date"], dayfirst=True, errors="coerce")
         report["bad_dates"] = df.index[parsed.isna() & df["date"].notna()]
     else:
         report["bad_dates"] = pd.Index([])
@@ -259,9 +259,9 @@ def clean_data(
     """
     df = df.copy()
 
-    # 1. Parse dates
+    # 1. Parse dates (try dayfirst=True for DD/MM/YYYY formats)
     if "date" in df.columns:
-        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        df["date"] = pd.to_datetime(df["date"], dayfirst=True, errors="coerce")
         # Drop rows where date could not be parsed
         df = df.dropna(subset=["date"])
 

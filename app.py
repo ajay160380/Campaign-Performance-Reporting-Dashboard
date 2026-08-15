@@ -310,11 +310,18 @@ with st.expander("🔍 Data quality report", expanded=False):
     )
 
 # ------------------------------------------------------------------
-# Clean the data
+# Clean the data (cached for performance with large datasets)
 # ------------------------------------------------------------------
-with st.spinner("Cleaning and processing data…"):
-    df = clean_data(raw_df, drop_duplicates=True, fill_missing_zero=True)
-    df = add_metric_columns(df)
+@st.cache_data(show_spinner="Cleaning and processing data…")
+def _process_data(raw_df_json: str) -> pd.DataFrame:
+    """Clean and add metric columns — cached to avoid recomputation."""
+    _df = pd.read_json(raw_df_json)
+    _df = clean_data(_df, drop_duplicates=True, fill_missing_zero=True)
+    _df = add_metric_columns(_df)
+    return _df
+
+
+df = _process_data(raw_df.to_json())
 
 # ------------------------------------------------------------------
 # Section B — Sidebar filters
@@ -376,11 +383,38 @@ st.caption("Real-time metrics across all filtered campaigns")
 
 kpis = compute_summary_kpis(filtered)
 
+
+# --- Smart Indian number formatter (₹49.3L, ₹5.2Cr) ---
+def format_inr(value: float) -> str:
+    """Format large numbers in Indian style: L (Lakh) / Cr (Crore)."""
+    abs_val = abs(value)
+    sign = "-" if value < 0 else ""
+    if abs_val >= 1_00_00_000:  # 1 Crore+
+        return f"{sign}₹{abs_val / 1_00_00_000:.1f}Cr"
+    elif abs_val >= 1_00_000:  # 1 Lakh+
+        return f"{sign}₹{abs_val / 1_00_000:.1f}L"
+    elif abs_val >= 1_000:  # 1 Thousand+
+        return f"{sign}₹{abs_val / 1_000:.1f}K"
+    else:
+        return f"{sign}₹{abs_val:,.0f}"
+
+
+def format_num(value: float) -> str:
+    """Format large counts in compact style: K / M."""
+    abs_val = abs(value)
+    if abs_val >= 1_000_000:
+        return f"{abs_val / 1_000_000:.1f}M"
+    elif abs_val >= 1_000:
+        return f"{abs_val / 1_000:.1f}K"
+    else:
+        return f"{abs_val:,.0f}"
+
+
 col1, col2, col3, col4, col5, col6 = st.columns(6)
 
-col1.metric("Total Spend", f"₹{kpis['total_spend']:,.0f}")
-col2.metric("Total Revenue", f"₹{kpis['total_revenue']:,.0f}")
-col3.metric("Total Clicks", f"{kpis['total_clicks']:,.0f}")
+col1.metric("Total Spend", format_inr(kpis['total_spend']))
+col2.metric("Total Revenue", format_inr(kpis['total_revenue']))
+col3.metric("Total Clicks", format_num(kpis['total_clicks']))
 col4.metric("Overall CTR", f"{kpis['overall_ctr']:.2f}%")
 col5.metric("Overall CPC", f"₹{kpis['overall_cpc']:.2f}")
 col6.metric("Overall ROI", f"{kpis['overall_roi']:.1f}%")
