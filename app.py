@@ -313,15 +313,14 @@ with st.expander("🔍 Data quality report", expanded=False):
 # Clean the data (cached for performance with large datasets)
 # ------------------------------------------------------------------
 @st.cache_data(show_spinner="Cleaning and processing data…")
-def _process_data(raw_df_json: str) -> pd.DataFrame:
+def _process_data(_df: pd.DataFrame) -> pd.DataFrame:
     """Clean and add metric columns — cached to avoid recomputation."""
-    _df = pd.read_json(raw_df_json)
     _df = clean_data(_df, drop_duplicates=True, fill_missing_zero=True)
     _df = add_metric_columns(_df)
     return _df
 
 
-df = _process_data(raw_df.to_json())
+df = _process_data(raw_df)
 
 # ------------------------------------------------------------------
 # Section B — Sidebar filters
