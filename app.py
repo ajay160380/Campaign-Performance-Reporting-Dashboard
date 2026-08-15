@@ -18,6 +18,7 @@ from utils.data_loader import (
     validate_columns,
     run_quality_checks,
     clean_data,
+    auto_map_columns,
 )
 from utils.metrics import add_metric_columns, compute_summary_kpis, aggregate_by
 from utils.charts import (
@@ -231,6 +232,19 @@ else:
 
 if raw_df is None:
     st.stop()
+
+# --- Smart Auto Column Mapping (handles Kaggle & external datasets) ---
+raw_df, col_mapping = auto_map_columns(raw_df)
+if col_mapping:
+    mapping_text = "  \n".join(
+        f"• **{old.title()}** → **{new.title()}**"
+        for old, new in col_mapping.items()
+    )
+    st.info(
+        f"🔄 **Smart Column Mapping Applied!** "
+        f"The following columns were auto-detected and renamed:\n\n{mapping_text}",
+        icon="🧠",
+    )
 
 st.caption(data_source)
 

@@ -28,6 +28,107 @@ NUMERIC_COLUMNS = ["impressions", "clicks", "spend", "revenue", "conversions"]
 
 
 # ------------------------------------------------------------------
+# Smart Column Aliases — maps common Kaggle/external names → our names
+# Each key = our required column, values = list of known aliases (lowercase)
+# ------------------------------------------------------------------
+COLUMN_ALIASES = {
+    "campaign name": [
+        "campaign_name", "campaign name", "campaign", "campaign_type",
+        "campaign_id", "campaign id", "ad_group", "ad group", "ad_name",
+        "ad name", "adset_name", "adset name", "campaign_title",
+        "campaign title", "name",
+    ],
+    "date": [
+        "date", "day", "report_date", "report date", "start_date",
+        "start date", "end_date", "end date", "created_at", "created at",
+        "period", "month", "week", "year_month",
+    ],
+    "impressions": [
+        "impressions", "impression", "imps", "views", "ad_views",
+        "ad views", "total_impressions", "total impressions", "reach",
+    ],
+    "clicks": [
+        "clicks", "click", "total_clicks", "total clicks", "link_clicks",
+        "link clicks", "website_clicks", "website clicks",
+    ],
+    "spend": [
+        "spend", "cost", "total_spend", "total spend", "amount_spent",
+        "amount spent", "acquisition_cost", "acquisition cost",
+        "campaign_cost", "campaign cost", "ad_spend", "ad spend",
+        "budget", "total_cost", "total cost", "media_cost", "media cost",
+        "investment", "adspend", "marketing_spend", "marketing spend",
+        "cost_per_result", "advertising_cost",
+    ],
+    "revenue": [
+        "revenue", "total_revenue", "total revenue", "earnings",
+        "income", "sales", "total_sales", "total sales", "value",
+        "conversion_value", "conversion value", "purchase_value",
+        "purchase value", "gmv", "gross_revenue", "gross revenue",
+        "return", "returns",
+    ],
+    "conversions": [
+        "conversions", "conversion", "total_conversions",
+        "total conversions", "leads", "lead", "applications",
+        "application", "purchases", "purchase", "signups", "sign_ups",
+        "sign ups", "registrations", "registration", "actions",
+        "results", "installs", "app_installs", "app installs",
+        "subscribers", "orders", "total_orders",
+    ],
+    "platform": [
+        "platform", "channel", "channels_used", "channels used",
+        "source", "ad_platform", "ad platform", "network",
+        "traffic_source", "traffic source", "medium", "publisher",
+        "ad_network", "ad network", "marketing_channel",
+        "marketing channel", "source_medium", "device", "social_network",
+    ],
+}
+
+
+def auto_map_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """
+    Automatically detect and rename columns to match the dashboard schema.
+
+    Uses fuzzy alias matching: for each required column, scans the
+    DataFrame's columns against a curated list of known aliases.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Raw DataFrame with potentially non-standard column names.
+
+    Returns
+    -------
+    tuple[pd.DataFrame, dict]
+        (renamed_df, mapping) where mapping shows {original → standard}.
+        Only columns that were actually renamed are included in mapping.
+    """
+    df = df.copy()
+    # Normalise: strip whitespace, lowercase
+    df.columns = df.columns.str.strip().str.lower()
+
+    existing_cols = set(df.columns)
+    rename_map = {}  # old_name → new_standard_name
+
+    for standard_name, aliases in COLUMN_ALIASES.items():
+        # Skip if the standard name already exists
+        if standard_name in existing_cols:
+            continue
+
+        # Search aliases for a match
+        for alias in aliases:
+            if alias in existing_cols and alias != standard_name:
+                rename_map[alias] = standard_name
+                existing_cols.discard(alias)
+                existing_cols.add(standard_name)
+                break
+
+    if rename_map:
+        df = df.rename(columns=rename_map)
+
+    return df, rename_map
+
+
+# ------------------------------------------------------------------
 # Public API
 # ------------------------------------------------------------------
 
